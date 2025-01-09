@@ -1,12 +1,12 @@
-Project Title
+PROJECT TITLE
 
 Smart Contract Tutorial with Web3.js and Ganache
 
-Description
+DESCRIPTION
 
 This project demonstrates the development and interaction with Ethereum-based smart contracts using web3.js and Ganache. It includes a sample environment for deploying and testing smart contracts locally with Ganache and connecting to public testnets using MetaMask.
 
-Features
+FEATURES
 
 Configure and run web3.js with Ganache for local blockchain testing.
 
