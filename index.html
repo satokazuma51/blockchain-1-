@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interact with Smart Contract</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<h1>Smart Contract Interaction</h1>
+<button id="connectButton">Connect MetaMask</button>
+<button id="getBalanceButton">Get Contract Balance</button>
+<button id="withdrawButton">Withdraw Ether</button>
+
+<script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+<script>
+    let web3;
+    let contract;
+    let account;
+
+    async function connectMetaMask() {
+        if (typeof window.ethereum !== 'undefined') {
+            console.log('MetaMask is installed!');
+
+            web3 = new Web3(window.ethereum);
+
+            try {
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const accounts = await web3.eth.getAccounts();
+                account = accounts[0]; // Get the first account
+
+                console.log('Connected Account:', account);
+
+                const contractABI = [
+                    {
+                        "inputs": [],
+                        "stateMutability": "nonpayable",
+                        "type": "constructor"
+                    },
+                    {
+                        "stateMutability": "payable",
+                        "type": "fallback"
+                    },
+                    {
+                        "inputs": [],
+                        "name": "withdraw",
+                        "outputs": [],
+                        "stateMutability": "nonpayable",
+                        "type": "function"
+                    },
+                    {
+                        "stateMutability": "payable",
+                        "type": "receive"
+                    },
+                    {
+                        "inputs": [],
+                        "name": "getBalance",
+                        "outputs": [
+                            {
+                                "internalType": "uint256",
+                                "name": "",
+                                "type": "uint256"
+                            }
+                        ],
+                        "stateMutability": "view",
+                        "type": "function"
+                    },
+                    {
+                        "inputs": [],
+                        "name": "owner",
+                        "outputs": [
+                            {
+                                "internalType": "address payable",
+                                "name": "",
+                                "type": "address"
+                            }
+                        ],
+                        "stateMutability": "view",
+                        "type": "function"
+                    }
+                ];
+
+                const contractAddress = '0x3e600fdecB08aBb9868Df390E0D94Ed5Bc106F56';
+
+                contract = new web3.eth.Contract(contractABI, contractAddress);
+
+
+                document.getElementById('getBalanceButton').addEventListener('click', getContractBalance);
+                document.getElementById('withdrawButton').addEventListener('click', withdrawFromContract);
+
+            } catch (error) {
+                console.error('MetaMask connection error:', error);
+                alert('Please allow MetaMask connection.');
+            }
+        } else {
+            console.log('Please install MetaMask!');
+            alert('MetaMask is not installed. Please install it to continue.');
+        }
+    }
+
+    async function getContractBalance() {
+        try {
+            const balanceWei = await web3.eth.getBalance(contract.options.address);
+            const balanceEther = web3.utils.fromWei(balanceWei, 'ether'); // Convert Wei to Ether
+            console.log('Contract Balance:', balanceEther);
+            alert('Contract Balance: ' + balanceEther + ' ETH');
+        } catch (error) {
+            console.error('Error getting balance:', error);
+            alert('Error getting balance: ' + error.message);
+        }
+    }
+
+    async function withdrawFromContract() {
+        try {
+            const owner = await contract.methods.owner().call();
+
+            if (account.toLowerCase() === owner.toLowerCase()) {
+                const balanceBefore = await web3.eth.getBalance(contract.options.address);
+                console.log("Contract Balance Before Withdrawal:", web3.utils.fromWei(balanceBefore, 'ether'), "ETH");
+
+                await contract.methods.withdraw().send({ from: account });
+
+                const balanceAfter = await web3.eth.getBalance(contract.options.address);
+                console.log("Contract Balance After Withdrawal:", web3.utils.fromWei(balanceAfter, 'ether'), "ETH");
+
+                alert('Withdrawal successful!');
+            } else {
+                console.log('Only the owner can withdraw.');
+                alert('Only the owner can withdraw!');
+            }
+        } catch (error) {
+            console.error('Error withdrawing:', error);
+            alert('Error withdrawing: ' + error.message);
+        }
+    }
+
+    document.getElementById('connectButton').addEventListener('click', connectMetaMask);
+
+</script>
+</body>
+</html>
